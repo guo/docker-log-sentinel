@@ -1,0 +1,23 @@
+{
+  "name": "docker-log-sentinel",
+  "version": "1.0.0",
+  "description": "A TypeScript CLI that monitors Docker logs and sends smart alerts",
+  "main": "index.ts",
+  "type": "commonjs",
+  "scripts": {
+    "start": "ts-node index.ts",
+    "build": "tsc index.ts --outDir dist --target es2020",
+    "dev": "ts-node --watch index.ts"
+  },
+  "dependencies": {
+    "dockerode": "^4.0.2",
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "@types/dockerode": "^3.3.29",
+    "@types/yargs": "^17.0.32",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "ts-node": "^10.9.0"
+  }
+}
