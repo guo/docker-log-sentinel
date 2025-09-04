@@ -14,13 +14,13 @@ A TypeScript CLI that monitors Docker container logs and sends intelligent alert
 
 ## Requirements
 
-- Node.js 18+
+- Bun 1.0+
 - Docker socket access (default `/var/run/docker.sock`) or remote via env `DOCKER_HOST`
 
 ## Installation
 
 ```bash
-npm install
+bun install
 ```
 
 ## Usage
@@ -29,17 +29,20 @@ npm install
 
 ```bash
 # Watch all containers
-npm start -- --all
+bun start --all
 
-# Watch specific containers
-npm start -- --containers api,worker --since 5m
+# Watch specific containers  
+bun start --containers api,worker --since 5m
 
 # With webhook alerts
-SLACK_WEBHOOK_URL=https://hooks.slack.com/... npm start -- --all
-LARK_WEBHOOK_URL=https://open.feishu.cn/open-apis/bot/v2/hook/... npm start -- --all
+SLACK_WEBHOOK_URL=https://hooks.slack.com/... bun start --all
+LARK_WEBHOOK_URL=https://open.feishu.cn/open-apis/bot/v2/hook/... bun start --all
 
 # Development with auto-restart
-npm run dev -- --all
+bun dev --all
+
+# Direct execution (executable via shebang)
+./index.ts --all
 ```
 
 ### Docker Deployment

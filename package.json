@@ -3,11 +3,12 @@
   "version": "1.0.0",
   "description": "A TypeScript CLI that monitors Docker logs and sends smart alerts",
   "main": "index.ts",
-  "type": "commonjs",
+  "type": "module",
   "scripts": {
-    "start": "ts-node index.ts",
-    "build": "tsc index.ts --outDir dist --target es2020",
-    "dev": "ts-node --watch index.ts"
+    "start": "bun run index.ts",
+    "build": "bun build index.ts --outdir dist --target bun",
+    "dev": "bun --watch index.ts",
+    "install": "bun install"
   },
   "dependencies": {
     "dockerode": "^4.0.2",
@@ -16,8 +17,10 @@
   "devDependencies": {
     "@types/dockerode": "^3.3.29",
     "@types/yargs": "^17.0.32",
-    "@types/node": "^20.0.0",
-    "typescript": "^5.0.0",
-    "ts-node": "^10.9.0"
-  }
+    "@types/bun": "latest",
+    "typescript": "^5.0.0"
+  },
+  "trustedDependencies": [
+    "@types/bun"
+  ]
 }

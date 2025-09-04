@@ -1,4 +1,4 @@
-#!/usr/bin/env ts-node
+#!/usr/bin/env bun
 
 /**
  * Docker Log Sentinel
@@ -177,8 +177,9 @@ async function streamContainer(containerId: string, name: string, since: string)
   const stream = await c.logs(opts)
 
   // Create separate streams for stdout and stderr to properly handle Docker log format
-  const stdout = new (require('stream').PassThrough)()
-  const stderr = new (require('stream').PassThrough)()
+  const { PassThrough } = await import('node:stream')
+  const stdout = new PassThrough()
+  const stderr = new PassThrough()
   c.modem.demuxStream(stream, stdout, stderr)
 
   // Process both stdout and stderr
