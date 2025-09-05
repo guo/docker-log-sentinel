@@ -51,15 +51,93 @@ bun dev --all
 # Pull the pre-built image
 docker pull ghcr.io/guo/docker-log-sentinel:latest
 
-# Run container (mount Docker socket read-only, pass webhook URLs)
+# Monitor all containers (default behavior)
 docker run --name log-sentinel --restart=always \
-  -e LARK_WEBHOOK_URL="https://open.feishu.cn/open-apis/bot/v2/hook/XXXX" \
-  -e SLACK_WEBHOOK_URL="" \
   -v /var/run/docker.sock:/var/run/docker.sock:ro \
   ghcr.io/guo/docker-log-sentinel:latest
 
+# Monitor specific containers by name
+docker run --name log-sentinel --restart=always \
+  -v /var/run/docker.sock:/var/run/docker.sock:ro \
+  ghcr.io/guo/docker-log-sentinel:latest \
+  --containers api,worker,database
+
+# Monitor with time range and webhook alerts
+docker run --name log-sentinel --restart=always \
+  -e SLACK_WEBHOOK_URL="https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK" \
+  -e LARK_WEBHOOK_URL="https://open.feishu.cn/open-apis/bot/v2/hook/XXXX" \
+  -v /var/run/docker.sock:/var/run/docker.sock:ro \
+  ghcr.io/guo/docker-log-sentinel:latest \
+  --containers myapp,redis --since 10m --summarizeEvery 600
+
 # Or build locally if needed
 docker build -t log-sentinel .
+docker run --name log-sentinel --restart=always \
+  -v /var/run/docker.sock:/var/run/docker.sock:ro \
+  log-sentinel --all
+```
+
+### Direct Deployment
+
+For production environments where you want to run the sentinel directly on the host:
+
+```bash
+# Clone and install
+git clone <repository-url>
+cd docker-log-sentinel
+bun install
+
+# Run as a background service (using nohup)
+nohup bun start --all --summarizeEvery 300 > sentinel.log 2>&1 &
+
+# Or monitor specific containers with webhook
+SLACK_WEBHOOK_URL="https://hooks.slack.com/services/YOUR/WEBHOOK" \
+nohup bun start --containers api,worker,database --since 5m > sentinel.log 2>&1 &
+
+# Check if running
+ps aux | grep "bun.*index.ts"
+
+# View logs
+tail -f sentinel.log
+
+# Stop the service
+pkill -f "bun.*index.ts"
+```
+
+#### Systemd Service (Recommended for Linux)
+
+Create a systemd service for automatic startup and management:
+
+```bash
+# Create service file
+sudo tee /etc/systemd/system/docker-log-sentinel.service > /dev/null <<EOF
+[Unit]
+Description=Docker Log Sentinel
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/docker-log-sentinel
+ExecStart=/usr/local/bin/bun start --all --summarizeEvery 300
+Environment=SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Enable and start the service
+sudo systemctl enable docker-log-sentinel
+sudo systemctl start docker-log-sentinel
+
+# Check status
+sudo systemctl status docker-log-sentinel
+
+# View logs
+sudo journalctl -u docker-log-sentinel -f
 ```
 
 ## Configuration Options
