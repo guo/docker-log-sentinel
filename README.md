@@ -48,15 +48,18 @@ bun dev --all
 ### Docker Deployment
 
 ```bash
-# Build image
-docker build -t log-sentinel .
+# Pull the pre-built image
+docker pull ghcr.io/guo/docker-log-sentinel:latest
 
 # Run container (mount Docker socket read-only, pass webhook URLs)
 docker run --name log-sentinel --restart=always \
   -e LARK_WEBHOOK_URL="https://open.feishu.cn/open-apis/bot/v2/hook/XXXX" \
   -e SLACK_WEBHOOK_URL="" \
   -v /var/run/docker.sock:/var/run/docker.sock:ro \
-  log-sentinel
+  ghcr.io/guo/docker-log-sentinel:latest
+
+# Or build locally if needed
+docker build -t log-sentinel .
 ```
 
 ## Configuration Options
