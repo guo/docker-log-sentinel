@@ -7,8 +7,7 @@
   "scripts": {
     "start": "bun run index.ts",
     "build": "bun build index.ts --outdir dist --target bun",
-    "dev": "bun --watch index.ts",
-    "install": "bun install"
+    "dev": "bun --watch index.ts"
   },
   "dependencies": {
     "dockerode": "^4.0.2",
