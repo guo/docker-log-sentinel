@@ -146,7 +146,9 @@ sudo journalctl -u docker-log-sentinel -f
 - `--containers`: Comma-separated list of container names
 - `--since`: Time range for log history (e.g., 10m, 1h, 2025-09-01T00:00:00Z)
 - `--patterns`: Custom error detection regex (case-insensitive)
+  - Default: `(error|exception|panic|fatal|segfault|stack trace|traceback|unhandled|critical|ERR!|failed|reverted|execution reverted|gas needed)`
 - `--ignore`: Custom ignore patterns regex (case-insensitive)
+  - Default: `(healthcheck|heartbeat|timeout=0|connection reset by peer .* retrying|client aborted connection)`
 - `--summarizeEvery`: Seconds between summary alerts (default: 300)
 - `--rateLimit`: Minimum seconds between identical alerts (default: 120)
 - `--dockerSocket`: Custom Docker socket path
