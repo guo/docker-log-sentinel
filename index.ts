@@ -83,13 +83,13 @@ function getBucket<K, V>(m: Map<K, Map<string, V>>, k: K): Map<string, V> {
 }
 
 function normalizeLine(line: string): string {
-  // remove volatile numbers, uuids, hex strings, timestamps to improve deduping
+  // remove volatile data but preserve important distinguishing numbers
   return line
     .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/gi, '<uuid>')
-    .replace(/0x[0-9a-f]+/gi, '<hex>')
-    .replace(/\b\d{1,3}(?:\.\d{1,3}){3}\b/g, '<ip>')
-    .replace(/\b\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}:\d{2}(?:\.\d+)?Z?\b/g, '<ts>')
-    .replace(/\b\d+\b/g, '<num>')
+    .replace(/0x[0-9a-f]{8,}/gi, '<longhex>') // only replace long hex strings, keep short ones like error codes
+    .replace(/\b\d{1,3}(?:\.\d{1,3}){3}(?::\d+)?\b/g, '<ip>') // IP addresses with optional ports
+    .replace(/\b\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}:\d{2}(?:\.\d+)?Z?\b/g, '<ts>') // timestamps
+    .replace(/\b\d{10,}\b/g, '<bignum>') // only replace very large numbers (10+ digits), keep smaller ones
     .slice(0, 4000)
 }
 
@@ -125,7 +125,7 @@ async function sendWebhook(text: string) {
 }
 
 async function alertNow(containerName: string, msg: string) {
-  const text = `🚨 *${containerName}* error\n${'```'}\n${trim(msg, maxLen)}\n${'```'}`
+  const text = `🚨 *${containerName}* error\n${trim(msg, maxLen)}`
   console.error(`[ALERT] ${containerName}: ${trim(msg, 200)}`)
   await sendWebhook(text)
 }
@@ -215,6 +215,8 @@ async function listTargetContainers(): Promise<{ id: string; name: string }[]> {
   for (const c of all) {
     const name = (c.Names?.[0] || '').replace(/^\//, '')
     if (!name) continue
+    // Skip monitoring containers with "log-sentinel" in their name to prevent recursive alerts
+    if (name.includes('log-sentinel')) continue
     m.set(c.Id, name)
   }
 
