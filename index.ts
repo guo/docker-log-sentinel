@@ -76,6 +76,8 @@ interface Hit {
 const hits = new Map<string, Map<string, Hit>>()
 // per container -> fingerprint -> last alert time (epoch seconds)
 const lastAlertAt = new Map<string, Map<string, number>>()
+// per container -> fingerprint -> count at last summary
+const lastSummaryCount = new Map<string, Map<string, number>>()
 
 function getBucket<K, V>(m: Map<K, Map<string, V>>, k: K): Map<string, V> {
   if (!m.has(k)) m.set(k, new Map<string, V>())
@@ -134,11 +136,23 @@ async function summaryAlert() {
   const now = Math.floor(Date.now() / 1000)
   const lines: string[] = []
   for (const [container, fpMap] of hits) {
-    const top = [...fpMap.entries()]
-      .sort((a, b) => b[1].count - a[1].count)
-      .slice(0, 5)
-      .map(([fp, h]) => `• ${h.count}× since ${new Date(h.firstAt * 1000).toISOString()} — ${trim(h.sample, 160)}`)
-    if (top.length) {
+    const lastCounts = getBucket(lastSummaryCount, container)
+    const newErrors: [string, Hit, number][] = []
+    
+    for (const [fp, hit] of fpMap) {
+      const lastCount = lastCounts.get(fp) || 0
+      const newCount = hit.count - lastCount
+      if (newCount > 0) {
+        newErrors.push([fp, hit, newCount])
+        lastCounts.set(fp, hit.count)
+      }
+    }
+    
+    if (newErrors.length) {
+      const top = newErrors
+        .sort((a, b) => b[2] - a[2])
+        .slice(0, 5)
+        .map(([fp, hit, newCount]) => `• ${newCount}× new (${hit.count}× total) — ${trim(hit.sample, 160)}`)
       lines.push(`*${container}*\n${top.join('\n')}`)
     }
   }
